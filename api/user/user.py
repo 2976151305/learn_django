@@ -1,12 +1,13 @@
+import logging
+import json
+import re
+import hashlib
+
 from django.shortcuts import render
 
 from api.models import UserModel
 from django.http import JsonResponse
 from api.HTTP_STATUS import STATUS
-
-import logging
-import json
-import re
 
 logger = logging.getLogger('django')
 
@@ -38,8 +39,6 @@ class User():
     data = json.loads(request.body.decode('utf-8'))
     username = data['username']
     password = data['password']
-    # username = request.POST['username']
-    # password = request.POST['password']
     if not (username and password):
       data = {
         'code': STATUS.PARAMETER_ERROR,
@@ -65,9 +64,15 @@ class User():
       return JsonResponse(data)
     UserModel.objects.create(
       username = username,
-      password = password
+      password = hashlib.md5().update(password.encode(encoding = 'utf-8'))
     )
     return JsonResponse(data = {
       'code': STATUS.SUCCESS,
       'data': ''
     })
+
+  ''' 更新用户数据 '''
+  def updateUserInfo(request):
+    data = json.loads(request.body.decode('utf-8'))
+    UserModel.objects.filter(id = data['id']).update(**data)
+    
